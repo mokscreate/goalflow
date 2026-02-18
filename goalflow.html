@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>GOALflow</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black: #0f0f0f;
+  --white: #f5f4f0;
+  --gray-100: #eeede9;
+  --gray-200: #dddcd8;
+  --gray-400: #999890;
+  --gray-600: #666560;
+  --border: #e0dfd9;
+  --green: #3d6b4f;
+  --green-light: #e8f0eb;
+  --green-border: #c5dac9;
+  --red: #c0392b;
+  --red-light: #fdf0ee;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  background: var(--white);
+  color: var(--black);
+  font-family: 'Noto Sans SC', sans-serif;
+  font-weight: 300;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── NAV ── */
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--white);
+  z-index: 100;
+}
+.logo { font-family: 'DM Serif Display', serif; font-size: 18px; letter-spacing: 0.05em; }
+.logo em { font-style: italic; color: var(--gray-600); }
+.nav-right { display: flex; align-items: center; gap: 12px; }
+.nav-hint { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--gray-400); letter-spacing: 0.08em; }
+.btn-settings {
+  background: none; border: 1px solid var(--border); border-radius: 6px;
+  padding: 4px 10px; font-size: 11px; font-family: 'DM Mono', monospace;
+  color: var(--gray-600); cursor: pointer;
+}
+
+/* ── PAGES ── */
+.page { display: none; animation: fadeUp 0.25s ease; }
+.page.active { display: block; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── BOTTOM TABS ── */
+.bottom-tabs {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: 58px; background: var(--white);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-around;
+  z-index: 200;
+}
+.tab-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 6px 20px; cursor: pointer; border: none; background: none;
+  color: var(--gray-400); transition: color 0.15s;
+}
+.tab-btn.active { color: var(--black); }
+.tab-icon { font-size: 17px; }
+.tab-label { font-size: 10px; font-family: 'DM Mono', monospace; letter-spacing: 0.04em; }
+
+/* ── SHARED COMPONENTS ── */
+.page-wrap { padding: 36px 20px 100px; max-width: 520px; margin: 0 auto; }
+.mono-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; color: var(--gray-400); text-transform: uppercase; margin-bottom: 28px; }
+.serif-title { font-family: 'DM Serif Display', serif; font-size: 30px; line-height: 1.25; margin-bottom: 6px; }
+.serif-title em { font-style: italic; color: var(--gray-600); }
+.body-sub { font-size: 13px; color: var(--gray-600); margin-bottom: 36px; }
+
+.field-group { margin-bottom: 22px; }
+.field-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--gray-600); margin-bottom: 8px; display: block; }
+.field-input {
+  width: 100%; border: 1px solid var(--border); border-radius: 8px;
+  padding: 13px 15px; font-family: 'Noto Sans SC', sans-serif;
+  font-size: 15px; font-weight: 300; color: var(--black);
+  background: var(--white); outline: none; transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+.field-input:focus { border-color: var(--black); }
+.field-input::placeholder { color: var(--gray-400); }
+textarea.field-input { resize: none; height: 96px; }
+
+.chips { display: flex; gap: 7px; flex-wrap: wrap; }
+.chip {
+  padding: 7px 14px; border: 1px solid var(--border); border-radius: 20px;
+  font-size: 12px; font-family: 'DM Mono', monospace; cursor: pointer;
+  transition: all 0.15s; background: var(--white); color: var(--gray-600);
+}
+.chip.sel { background: var(--black); color: var(--white); border-color: var(--black); }
+
+.ai-tip {
+  background: var(--green-light); border: 1px solid var(--green-border);
+  border-radius: 8px; padding: 12px 14px; margin-top: 10px;
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.ai-tip-icon { font-size: 13px; flex-shrink: 0; margin-top: 2px; color: var(--green); }
+.ai-tip-text { font-size: 13px; color: var(--green); line-height: 1.55; }
+.ai-tip-text strong { font-weight: 500; }
+
+.btn-primary {
+  width: 100%; padding: 15px; background: var(--black); color: var(--white);
+  border: none; border-radius: 10px; font-size: 15px;
+  font-family: 'Noto Sans SC', sans-serif; font-weight: 400;
+  cursor: pointer; letter-spacing: 0.03em; transition: opacity 0.15s;
+  margin-top: 28px; position: relative;
+}
+.btn-primary:active { opacity: 0.8; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-secondary {
+  width: 100%; padding: 14px; background: transparent; color: var(--black);
+  border: 1px solid var(--border); border-radius: 10px; font-size: 14px;
+  font-family: 'Noto Sans SC', sans-serif; cursor: pointer; margin-top: 10px;
+}
+
+.loading-dots::after {
+  content: ''; animation: dots 1.2s infinite;
+}
+@keyframes dots {
+  0%,20% { content: ''; }
+  40% { content: '.'; }
+  60% { content: '..'; }
+  80%,100% { content: '...'; }
+}
+
+.error-box {
+  background: var(--red-light); border: 1px solid #f0c8c4;
+  border-radius: 8px; padding: 12px 14px; margin-top: 12px;
+  font-size: 13px; color: var(--red); line-height: 1.55;
+}
+
+/* ── PAGE: INPUT ── */
+.time-custom { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.time-custom input {
+  width: 60px; border: 1px solid var(--border); border-radius: 6px;
+  padding: 7px 10px; font-family: 'DM Mono', monospace; font-size: 13px;
+  text-align: center; outline: none; background: var(--white); color: var(--black);
+}
+.time-custom span { font-size: 13px; color: var(--gray-600); }
+
+/* ── PAGE: OUTLINE ── */
+.meta-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.meta-tag { font-family: 'DM Mono', monospace; font-size: 11px; padding: 3px 9px; background: var(--gray-100); border-radius: 4px; color: var(--gray-600); }
+
+.phase-card {
+  border: 1px solid var(--border); border-radius: 12px;
+  padding: 18px; margin-bottom: 10px; background: var(--white);
+}
+.phase-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.phase-num { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--gray-400); letter-spacing: 0.1em; }
+.phase-days-badge { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gray-600); background: var(--gray-100); padding: 2px 8px; border-radius: 4px; }
+.phase-name { font-size: 15px; font-weight: 500; margin-bottom: 5px; }
+.phase-desc { font-size: 13px; color: var(--gray-600); line-height: 1.6; }
+.phase-topics { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.topic-tag { font-size: 11px; padding: 2px 8px; border: 1px solid var(--border); border-radius: 4px; color: var(--gray-600); font-family: 'DM Mono', monospace; }
+
+.outline-note {
+  margin-top: 18px; padding: 14px; border: 1px dashed var(--border); border-radius: 10px;
+}
+.outline-note-label { font-size: 11px; color: var(--gray-400); font-family: 'DM Mono', monospace; margin-bottom: 5px; }
+.outline-note-text { font-size: 13px; color: var(--gray-600); line-height: 1.6; }
+
+/* ── PAGE: DAILY ── */
+.progress-wrap { padding: 20px 20px 0; }
+.progress-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.progress-goal-title { font-family: 'DM Serif Display', serif; font-size: 20px; }
+.progress-frac { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gray-600); }
+.progress-track { height: 3px; background: var(--gray-200); border-radius: 2px; overflow: hidden; margin-bottom: 4px; }
+.progress-fill { height: 100%; background: var(--black); border-radius: 2px; transition: width 0.5s ease; }
+.progress-sub { font-size: 11px; color: var(--gray-400); font-family: 'DM Mono', monospace; }
+
+.day-scroll {
+  display: flex; gap: 7px; padding: 18px 20px 0;
+  overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.day-scroll::-webkit-scrollbar { display: none; }
+.day-btn {
+  flex-shrink: 0; display: flex; flex-direction: column; align-items: center;
+  width: 50px; padding: 10px 0; border: 1px solid var(--border);
+  border-radius: 10px; cursor: pointer; background: var(--white);
+  transition: all 0.15s; gap: 3px;
+}
+.day-btn.cur { background: var(--black); border-color: var(--black); }
+.day-btn.done { border-color: var(--green); }
+.day-num-text { font-family: 'DM Mono', monospace; font-size: 15px; color: var(--gray-600); }
+.day-btn.cur .day-num-text { color: var(--white); }
+.day-btn.done .day-num-text { color: var(--green); }
+.day-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gray-200); }
+.day-btn.done .day-dot { background: var(--green); }
+.day-btn.cur .day-dot { background: rgba(255,255,255,0.35); }
+
+.divider { display: flex; align-items: center; gap: 10px; margin: 20px 20px 0; }
+.divider-line { flex: 1; height: 1px; background: var(--border); }
+.divider-text { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--gray-400); letter-spacing: 0.1em; text-transform: uppercase; }
+
+.tasks-wrap { padding: 20px 20px 0; }
+.tasks-day-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.tasks-day-title { font-family: 'DM Serif Display', serif; font-size: 22px; }
+.tasks-day-phase { font-size: 11px; color: var(--gray-400); font-family: 'DM Mono', monospace; }
+.tasks-day-desc { font-size: 13px; color: var(--gray-600); margin-bottom: 18px; line-height: 1.55; }
+
+.task-item {
+  display: flex; gap: 14px; padding: 15px 0;
+  border-bottom: 1px solid var(--border); align-items: flex-start; cursor: pointer;
+}
+.task-item:last-child { border-bottom: none; }
+.task-check {
+  width: 22px; height: 22px; border: 1.5px solid var(--gray-200);
+  border-radius: 50%; flex-shrink: 0; margin-top: 1px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.task-item.done .task-check { background: var(--black); border-color: var(--black); }
+.check-mark { display: none; color: white; font-size: 11px; font-weight: 600; }
+.task-item.done .check-mark { display: block; }
+.task-body { flex: 1; }
+.task-title { font-size: 14px; color: var(--black); margin-bottom: 3px; transition: color 0.2s; line-height: 1.5; }
+.task-item.done .task-title { color: var(--gray-400); text-decoration: line-through; }
+.task-est { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gray-400); }
+.task-tag {
+  font-size: 10px; padding: 2px 7px; background: var(--gray-100);
+  border-radius: 3px; color: var(--gray-600); margin-top: 5px;
+  display: inline-block; font-family: 'DM Mono', monospace;
+}
+.spacer { height: 160px; }
+
+/* FAB */
+.fab {
+  position: fixed; bottom: 66px; left: 50%; transform: translateX(-50%);
+  width: calc(100% - 40px); max-width: 480px; z-index: 150;
+}
+.fab-inner {
+  background: var(--black); color: var(--white); padding: 14px 18px;
+  border-radius: 12px; display: flex; align-items: center;
+  justify-content: space-between; gap: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+}
+.fab-text { font-size: 13px; line-height: 1.4; flex: 1; }
+.fab-text strong { font-weight: 500; }
+.fab-text small { display: block; font-size: 11px; opacity: 0.55; font-family: 'DM Mono', monospace; margin-top: 1px; }
+.fab-action {
+  background: white; color: var(--black); border: none; border-radius: 7px;
+  padding: 8px 14px; font-size: 12px; font-weight: 500; cursor: pointer;
+  white-space: nowrap; font-family: 'Noto Sans SC', sans-serif;
+}
+
+/* ── PAGE: SETTINGS ── */
+.settings-section { margin-bottom: 28px; }
+.settings-title { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; color: var(--gray-400); text-transform: uppercase; margin-bottom: 12px; }
+.settings-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0; border-bottom: 1px solid var(--border);
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-row-label { font-size: 14px; }
+.settings-row-sub { font-size: 12px; color: var(--gray-400); margin-top: 2px; font-family: 'DM Mono', monospace; }
+
+/* ── PAGE: HOME (plan list) ── */
+.plan-card {
+  border: 1px solid var(--border); border-radius: 12px; padding: 18px;
+  margin-bottom: 10px; cursor: pointer; transition: border-color 0.15s;
+}
+.plan-card:active { border-color: var(--gray-400); }
+.plan-card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.plan-card-title { font-size: 15px; font-weight: 500; line-height: 1.4; flex: 1; padding-right: 10px; }
+.plan-card-date { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--gray-400); }
+.plan-progress-mini { height: 3px; background: var(--gray-200); border-radius: 2px; overflow: hidden; margin-bottom: 6px; }
+.plan-progress-mini-fill { height: 100%; background: var(--black); border-radius: 2px; }
+.plan-progress-label { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gray-600); }
+.plan-card-del {
+  background: none; border: none; color: var(--gray-400); font-size: 12px;
+  cursor: pointer; padding: 2px 6px; font-family: 'DM Mono', monospace;
+  margin-top: 10px;
+}
+
+.empty-state { text-align: center; padding: 60px 20px; }
+.empty-icon { font-size: 36px; margin-bottom: 16px; }
+.empty-title { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 8px; }
+.empty-sub { font-size: 13px; color: var(--gray-600); margin-bottom: 28px; }
+.btn-start {
+  display: inline-block; padding: 13px 28px; background: var(--black);
+  color: var(--white); border: none; border-radius: 10px; font-size: 14px;
+  font-family: 'Noto Sans SC', sans-serif; cursor: pointer;
+}
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+  display: flex; align-items: flex-end; z-index: 500;
+  animation: fadeIn 0.2s ease;
+}
+.modal-overlay.hidden { display: none; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal-sheet {
+  background: var(--white); border-radius: 16px 16px 0 0;
+  padding: 28px 20px 40px; width: 100%;
+  animation: slideUp 0.25s ease;
+}
+@keyframes slideUp { from { transform: translateY(40px); } to { transform: translateY(0); } }
+.modal-title { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 6px; }
+.modal-sub { font-size: 13px; color: var(--gray-600); margin-bottom: 20px; }
+
+/* ── LOADING OVERLAY ── */
+.loading-overlay {
+  position: fixed; inset: 0; background: var(--white);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 600;
+}
+.loading-overlay.hidden { display: none; }
+.loading-spinner {
+  width: 32px; height: 32px; border: 2px solid var(--gray-200);
+  border-top-color: var(--black); border-radius: 50%;
+  animation: spin 0.8s linear infinite; margin-bottom: 20px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-msg { font-family: 'DM Serif Display', serif; font-size: 20px; margin-bottom: 6px; }
+.loading-sub { font-size: 13px; color: var(--gray-600); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">GOAL<em>flow</em></div>
+  <div class="nav-right">
+    <button class="btn-settings" onclick="showPage('settings')">设置</button>
+  </div>
+</nav>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay hidden" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-msg" id="loadingMsg">AI 正在规划</div>
+  <div class="loading-sub" id="loadingSub">通常需要 10～20 秒</div>
+</div>
+
+<!-- ═══ PAGE: HOME ═══ -->
+<div class="page active" id="page-home">
+  <div class="page-wrap">
+    <div class="mono-label">我的计划</div>
+    <div id="planList"></div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: INPUT ═══ -->
+<div class="page" id="page-input">
+  <div class="page-wrap">
+    <div class="mono-label">创建新计划</div>
+    <h1 class="serif-title">你想<em>完成</em><br>什么目标？</h1>
+    <p class="body-sub">告诉 AI，它来帮你拆解每一天</p>
+
+    <div class="field-group">
+      <label class="field-label">目标描述</label>
+      <textarea class="field-input" id="inputGoal" placeholder="例如：学会 Bash 脚本，能处理日常文件操作和自动化任务"></textarea>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">计划时长</label>
+      <div class="chips" id="timeChips">
+        <div class="chip" data-val="3">3天</div>
+        <div class="chip sel" data-val="7">1周</div>
+        <div class="chip" data-val="14">2周</div>
+        <div class="chip" data-val="30">1个月</div>
+      </div>
+      <div class="time-custom">
+        <span>或精确到</span>
+        <input type="number" id="customDays" value="7" min="1" max="365">
+        <span>天</span>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">每天可用时间</label>
+      <div class="chips" id="timePerDayChips">
+        <div class="chip" data-val="0.5">30分钟</div>
+        <div class="chip sel" data-val="1">1小时</div>
+        <div class="chip" data-val="1.5">1.5小时</div>
+        <div class="chip" data-val="2">2小时+</div>
+      </div>
+    </div>
+
+    <div class="ai-tip" id="aiEstimateTip" style="display:none">
+      <div class="ai-tip-icon">✦</div>
+      <div class="ai-tip-text" id="aiEstimateText"></div>
+    </div>
+
+    <div class="error-box" id="inputError" style="display:none"></div>
+
+    <button class="btn-primary" id="btnGenOutline" onclick="generateOutline()">
+      生成学习大纲 →
+    </button>
+  </div>
+</div>
+
+<!-- ═══ PAGE: OUTLINE ═══ -->
+<div class="page" id="page-outline">
+  <div class="page-wrap">
+    <div class="meta-row" id="outlineMeta"></div>
+    <h2 class="serif-title" id="outlineTitle">AI 规划了你的学习路径</h2>
+    <p class="body-sub">确认大纲后生成每日详细任务 · 可随时修改</p>
+    <div id="outlinePhases"></div>
+    <div class="outline-note">
+      <div class="outline-note-label">AI 说明</div>
+      <div class="outline-note-text" id="outlineNote">对大纲满意后，点击下方按钮生成详细每日任务。</div>
+    </div>
+    <button class="btn-primary" id="btnGenTasks" onclick="generateTasks()">确认大纲，生成每日任务 →</button>
+    <button class="btn-secondary" onclick="showPage('input')">重新生成大纲</button>
+  </div>
+</div>
+
+<!-- ═══ PAGE: DAILY ═══ -->
+<div class="page" id="page-daily">
+  <div class="progress-wrap">
+    <div class="progress-head">
+      <span class="progress-goal-title" id="dailyGoalTitle">目标</span>
+      <span class="progress-frac" id="dailyFrac">Day 1 / 7</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-sub" id="progressSub"></div>
+  </div>
+
+  <div class="day-scroll" id="dayScroll"></div>
+
+  <div class="divider">
+    <div class="divider-line"></div>
+    <div class="divider-text">今日任务</div>
+    <div class="divider-line"></div>
+  </div>
+
+  <div class="tasks-wrap">
+    <div class="tasks-day-head">
+      <span class="tasks-day-title" id="dayTitle">第 1 天</span>
+      <span class="tasks-day-phase" id="dayPhase"></span>
+    </div>
+    <div class="tasks-day-desc" id="dayDesc"></div>
+    <div id="taskList"></div>
+    <div class="spacer"></div>
+  </div>
+
+  <div class="fab" id="fab">
+    <div class="fab-inner">
+      <div class="fab-text">
+        <strong id="fabProgress">0 / 0 完成</strong>
+        <small id="fabSub">加油！</small>
+      </div>
+      <button class="fab-action" id="fabBtn">查看明天 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: SETTINGS ═══ -->
+<div class="page" id="page-settings">
+  <div class="page-wrap">
+    <div class="mono-label">设置</div>
+    <h1 class="serif-title">配置</h1>
+
+    <div class="settings-section" style="margin-top:28px;">
+      <div class="settings-title">API 设置</div>
+      <div class="field-group">
+        <label class="field-label">ANTHROPIC API KEY</label>
+        <input type="password" class="field-input" id="apiKeyInput" placeholder="sk-ant-api03-...">
+        <div style="font-size:12px;color:var(--gray-400);margin-top:6px;font-family:'DM Mono',monospace;">Key 仅存储在本设备，不会上传</div>
+      </div>
+      <button class="btn-primary" onclick="saveApiKey()" style="margin-top:12px;">保存</button>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-title">数据</div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">清除所有计划</div>
+          <div class="settings-row-sub">无法恢复</div>
+        </div>
+        <button style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:12px;font-family:'DM Mono',monospace;color:var(--red);cursor:pointer;" onclick="clearAll()">清除</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-title">关于</div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">GOALflow</div>
+          <div class="settings-row-sub">v1.0 · 由 Claude AI 驱动</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM TABS -->
+<div class="bottom-tabs">
+  <button class="tab-btn active" id="tab-home" onclick="showPage('home')">
+    <span class="tab-icon">⊟</span>
+    <span class="tab-label">计划</span>
+  </button>
+  <button class="tab-btn" id="tab-input" onclick="showPage('input')">
+    <span class="tab-icon">＋</span>
+    <span class="tab-label">新目标</span>
+  </button>
+  <button class="tab-btn" id="tab-daily" onclick="showPage('daily')">
+    <span class="tab-icon">◈</span>
+    <span class="tab-label">今日</span>
+  </button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  CONFIG — MiniMax API
+// ═══════════════════════════════════════════════════
+const DEFAULT_API_KEY = 'sk-api-YnQx4IddMTTtT_zESJ39PZhBiQJ7LKzFfTrGUd5eECYoLFxBZwRF8MibgE8Mhmiuf_WcZvzyVJmeYED4V96sDFxBHH4Gt9b3S6TfGHOqL3xhLktMv8pHnMA';
+const MINIMAX_GROUP_ID = '2022887234998378913';
+const WORKER_URL = 'https://goalflow-proxy.mokscreate.workers.dev';
+
+// ── STATE ──
+let state = {
+  plans: [],          // saved plans
+  currentPlanId: null,
+  currentDay: 0,      // 0-indexed
+  // draft while creating
+  draft: {
+    goal: '',
+    days: 7,
+    hoursPerDay: 1,
+    outline: null,    // { phases, note }
+    tasks: null,      // [ { day, phase, desc, items:[{title,est,tag}] } ]
+  }
+};
+
+// ── STORAGE ──
+function save() { localStorage.setItem('gf_state', JSON.stringify(state)); }
+function load() {
+  const raw = localStorage.getItem('gf_state');
+  if (raw) { try { state = JSON.parse(raw); } catch(e){} }
+}
+load();
+
+// ── API KEY ──
+function getApiKey() {
+  return localStorage.getItem('gf_apikey') || DEFAULT_API_KEY;
+}
+function saveApiKey() {
+  const k = document.getElementById('apiKeyInput').value.trim();
+  if (!k) { alert('请输入 API Key'); return; }
+  localStorage.setItem('gf_apikey', k);
+  alert('已保存！');
+}
+
+// ── PAGES ──
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const tab = document.getElementById('tab-' + name);
+  if (tab) tab.classList.add('active');
+
+  if (name === 'home') renderHome();
+  if (name === 'daily') renderDaily();
+  if (name === 'settings') {
+    const k = localStorage.getItem('gf_apikey') || '';
+    document.getElementById('apiKeyInput').value = k;
+  }
+}
+
+// ── CHIPS ──
+document.querySelectorAll('#timeChips .chip').forEach(c => {
+  c.addEventListener('click', () => {
+    document.querySelectorAll('#timeChips .chip').forEach(x => x.classList.remove('sel'));
+    c.classList.add('sel');
+    document.getElementById('customDays').value = c.dataset.val;
+  });
+});
+document.querySelectorAll('#timePerDayChips .chip').forEach(c => {
+  c.addEventListener('click', () => {
+    document.querySelectorAll('#timePerDayChips .chip').forEach(x => x.classList.remove('sel'));
+    c.classList.add('sel');
+  });
+});
+document.getElementById('customDays').addEventListener('input', function() {
+  document.querySelectorAll('#timeChips .chip').forEach(x => x.classList.remove('sel'));
+});
+
+// ── CALL MINIMAX DIRECTLY (Mobile Compatible) ──
+async function callClaude(prompt, systemPrompt) {
+  const key = getApiKey();
+  if (!key) throw new Error('请先在设置页填写 API Key');
+
+  // Direct MiniMax API call (bypasses Worker for mobile compatibility)
+  const response = await fetch('https://api.minimax.chat/v1/text/chatcompletion_pro', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${key}`
+    },
+    body: JSON.stringify({
+      model: 'abab6.5s-chat',
+      max_tokens: 4096,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+      ]
+    })
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.base_resp?.status_msg || `API 错误 ${response.status}: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  console.log('MiniMax response:', JSON.stringify(data));
+  if (!data.choices || !data.choices[0]) {
+    throw new Error('返回格式异常：' + JSON.stringify(data).slice(0, 200));
+  }
+  return data.choices[0].message.content;
+}
+
+// ── GENERATE OUTLINE ──
+async function generateOutline() {
+  const goal = document.getElementById('inputGoal').value.trim();
+  if (!goal) { showError('inputError', '请先填写你的目标'); return; }
+
+  const days = parseInt(document.getElementById('customDays').value) || 7;
+  const hoursChip = document.querySelector('#timePerDayChips .chip.sel');
+  const hours = hoursChip ? parseFloat(hoursChip.dataset.val) : 1;
+
+  state.draft = { goal, days, hoursPerDay: hours, outline: null, tasks: null };
+
+  hideError('inputError');
+  showLoading('AI 正在分析你的目标', '通常需要 10～20 秒');
+  disableBtn('btnGenOutline');
+
+  const systemPrompt = `你是一个助手，帮用户制定学习计划。请只返回JSON，不要返回其他任何内容。格式如下：
+{"estimate":"时间评估一句话","phases":[{"num":1,"name":"阶段名","days":"Day 1-3","dayStart":1,"dayEnd":3,"desc":"描述","topics":["主题1","主题2"]}],"note":"建议一句话"}`;
+
+  const prompt = `目标：${goal}
+计划天数：${days} 天
+每天学习时间：${hours} 小时
+
+请生成合理的学习阶段大纲，阶段数量根据天数合理分配（通常2-4个阶段）。`;
+
+  try {
+    const raw = await callClaude(prompt, systemPrompt);
+    const cleaned = raw.replace(/```json|```/g, '').trim();
+    const outline = JSON.parse(cleaned);
+    state.draft.outline = outline;
+    renderOutline();
+    showPage('outline');
+  } catch(e) {
+    showError('inputError', '生成失败：' + e.message);
+  } finally {
+    hideLoading();
+    enableBtn('btnGenOutline', '生成学习大纲 →');
+  }
+}
+
+function renderOutline() {
+  const { goal, days, hoursPerDay, outline } = state.draft;
+
+  document.getElementById('outlineMeta').innerHTML = `
+    <span class="meta-tag">${goal.slice(0,15)}${goal.length>15?'…':''}</span>
+    <span class="meta-tag">${days} 天</span>
+    <span class="meta-tag">每天 ${hoursPerDay}h</span>
+  `;
+
+  document.getElementById('outlineTitle').textContent = `AI 规划了 ${outline.phases.length} 个学习阶段`;
+  document.getElementById('outlineNote').textContent = outline.note;
+
+  // AI estimate tip on input page
+  document.getElementById('aiEstimateText').innerHTML = `<strong>AI 预估：</strong>${outline.estimate}`;
+  document.getElementById('aiEstimateTip').style.display = 'flex';
+
+  document.getElementById('outlinePhases').innerHTML = outline.phases.map((p, i) => `
+    <div class="phase-card">
+      <div class="phase-top">
+        <span class="phase-num">PHASE ${String(i+1).padStart(2,'0')}</span>
+        <span class="phase-days-badge">${p.days}</span>
+      </div>
+      <div class="phase-name">${p.name}</div>
+      <div class="phase-desc">${p.desc}</div>
+      <div class="phase-topics">
+        ${p.topics.map(t => `<span class="topic-tag">${t}</span>`).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── GENERATE TASKS ──
+async function generateTasks() {
+  const { goal, days, hoursPerDay, outline } = state.draft;
+
+  showLoading('AI 正在生成每日任务', '内容较多，需要 20～40 秒');
+  disableBtn('btnGenTasks');
+
+  const systemPrompt = `你是一个助手，帮用户拆解每日学习任务。请只返回JSON，不要返回其他任何内容。格式：{"days":[{"day":1,"phase":"阶段名","desc":"今日主题","items":[{"title":"任务名","est":"约15分钟","tag":"学习"}]}]}`;
+
+  const outlineText = outline.phases.map(p =>
+    `${p.name}（${p.days}）：${p.desc}。主题：${p.topics.join('、')}`
+  ).join('\n');
+
+  const prompt = `目标：${goal}
+计划：${days} 天，每天 ${hoursPerDay} 小时
+大纲：
+${outlineText}
+
+请为每一天（共 ${days} 天）生成 3-5 个具体可执行的任务，每个任务有标题、预计时间和类型标签。`;
+
+  try {
+    const raw = await callClaude(prompt, systemPrompt);
+    const cleaned = raw.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(cleaned);
+    state.draft.tasks = result.days;
+
+    // save as plan
+    const planId = Date.now().toString();
+    const plan = {
+      id: planId,
+      goal,
+      days,
+      hoursPerDay,
+      outline,
+      tasks: result.days,
+      checks: {}, // { "day-taskIdx": true }
+      createdAt: new Date().toLocaleDateString('zh-CN'),
+    };
+    state.plans.push(plan);
+    state.currentPlanId = planId;
+    state.currentDay = 0;
+    save();
+
+    showPage('daily');
+  } catch(e) {
+    document.getElementById('page-outline').querySelector('.error-box') && null;
+    alert('生成失败：' + e.message);
+    enableBtn('btnGenTasks', '确认大纲，生成每日任务 →');
+  } finally {
+    hideLoading();
+  }
+}
+
+// ── RENDER HOME ──
+function renderHome() {
+  const el = document.getElementById('planList');
+  if (state.plans.length === 0) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">✦</div>
+        <div class="empty-title">还没有计划</div>
+        <div class="empty-sub">创建你的第一个 AI 学习计划</div>
+        <button class="btn-start" onclick="showPage('input')">开始规划 →</button>
+      </div>
+    `;
+    return;
+  }
+
+  el.innerHTML = state.plans.slice().reverse().map(plan => {
+    const totalTasks = plan.tasks.reduce((s, d) => s + d.items.length, 0);
+    const doneTasks = Object.keys(plan.checks).length;
+    const pct = totalTasks ? Math.round(doneTasks / totalTasks * 100) : 0;
+    return `
+      <div class="plan-card" onclick="openPlan('${plan.id}')">
+        <div class="plan-card-head">
+          <div class="plan-card-title">${plan.goal}</div>
+          <div class="plan-card-date">${plan.createdAt}</div>
+        </div>
+        <div class="plan-progress-mini">
+          <div class="plan-progress-mini-fill" style="width:${pct}%"></div>
+        </div>
+        <div class="plan-progress-label">${doneTasks} / ${totalTasks} 任务完成 · ${plan.days}天计划</div>
+        <button class="plan-card-del" onclick="event.stopPropagation();deletePlan('${plan.id}')">删除</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function openPlan(id) {
+  state.currentPlanId = id;
+  state.currentDay = 0;
+  // find today: first day with incomplete tasks
+  const plan = getPlan();
+  if (plan) {
+    for (let i = 0; i < plan.tasks.length; i++) {
+      const dayDone = plan.tasks[i].items.every((_, ti) => plan.checks[`${i}-${ti}`]);
+      if (!dayDone) { state.currentDay = i; break; }
+      if (i === plan.tasks.length - 1) state.currentDay = i;
+    }
+  }
+  save();
+  showPage('daily');
+}
+
+function deletePlan(id) {
+  if (!confirm('确认删除这个计划？')) return;
+  state.plans = state.plans.filter(p => p.id !== id);
+  if (state.currentPlanId === id) state.currentPlanId = null;
+  save();
+  renderHome();
+}
+
+function clearAll() {
+  if (!confirm('确认清除所有计划？')) return;
+  state.plans = [];
+  state.currentPlanId = null;
+  save();
+  renderHome();
+}
+
+// ── RENDER DAILY ──
+function getPlan() { return state.plans.find(p => p.id === state.currentPlanId); }
+
+function renderDaily() {
+  const plan = getPlan();
+  if (!plan) {
+    document.getElementById('page-daily').innerHTML = `<div class="page-wrap"><div class="empty-state"><div class="empty-icon">◈</div><div class="empty-title">没有活跃计划</div><div class="empty-sub">去创建一个吧</div><button class="btn-start" onclick="showPage('input')">开始规划 →</button></div></div>`;
+    return;
+  }
+
+  const { tasks, checks, goal, days } = plan;
+  const totalTasks = tasks.reduce((s, d) => s + d.items.length, 0);
+  const doneTasks = Object.keys(checks).length;
+  const pct = totalTasks ? Math.round(doneTasks / totalTasks * 100) : 0;
+
+  document.getElementById('dailyGoalTitle').textContent = goal.slice(0, 12) + (goal.length > 12 ? '…' : '');
+  document.getElementById('dailyFrac').textContent = `Day ${state.currentDay + 1} / ${days}`;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressSub').textContent = `整体完成 ${pct}%`;
+
+  // day scroll
+  document.getElementById('dayScroll').innerHTML = tasks.map((_, i) => {
+    const dayDone = tasks[i].items.every((__, ti) => checks[`${i}-${ti}`]);
+    const isCur = i === state.currentDay;
+    return `<div class="day-btn ${isCur ? 'cur' : ''} ${dayDone ? 'done' : ''}" onclick="selectDay(${i})">
+      <span class="day-num-text">${i + 1}</span>
+      <div class="day-dot"></div>
+    </div>`;
+  }).join('');
+
+  renderDayTasks();
+}
+
+function selectDay(i) {
+  state.currentDay = i;
+  save();
+  const plan = getPlan();
+  document.querySelectorAll('.day-btn').forEach((b, idx) => {
+    b.classList.toggle('cur', idx === i);
+  });
+  renderDayTasks();
+}
+
+function renderDayTasks() {
+  const plan = getPlan();
+  if (!plan) return;
+  const dayData = plan.tasks[state.currentDay];
+  if (!dayData) return;
+
+  document.getElementById('dayTitle').textContent = `第 ${state.currentDay + 1} 天`;
+  document.getElementById('dayPhase').textContent = dayData.phase || '';
+  document.getElementById('dayDesc').textContent = dayData.desc || '';
+
+  const checks = plan.checks;
+  const items = dayData.items;
+  const doneCnt = items.filter((_, ti) => checks[`${state.currentDay}-${ti}`]).length;
+
+  document.getElementById('taskList').innerHTML = items.map((item, ti) => {
+    const key = `${state.currentDay}-${ti}`;
+    const done = !!checks[key];
+    return `<div class="task-item ${done ? 'done' : ''}" onclick="toggleTask(${ti})">
+      <div class="task-check"><span class="check-mark">✓</span></div>
+      <div class="task-body">
+        <div class="task-title">${item.title}</div>
+        <div class="task-est">⏱ ${item.est}</div>
+        <span class="task-tag">${item.tag}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  // fab
+  document.getElementById('fabProgress').textContent = `${doneCnt} / ${items.length} 完成`;
+  const allDone = doneCnt === items.length;
+  const isLast = state.currentDay === plan.tasks.length - 1;
+  document.getElementById('fabSub').textContent = allDone
+    ? (isLast ? '🎉 全部完成！' : '今日全部完成，继续加油！')
+    : `还有 ${items.length - doneCnt} 个任务`;
+  const fabBtn = document.getElementById('fabBtn');
+  if (allDone && !isLast) {
+    fabBtn.textContent = '查看明天 →';
+    fabBtn.onclick = () => selectDay(state.currentDay + 1);
+  } else {
+    fabBtn.textContent = '计划详情';
+    fabBtn.onclick = () => showPage('home');
+  }
+}
+
+function toggleTask(ti) {
+  const plan = getPlan();
+  if (!plan) return;
+  const key = `${state.currentDay}-${ti}`;
+  if (plan.checks[key]) delete plan.checks[key];
+  else plan.checks[key] = true;
+  save();
+  renderDayTasks();
+  // update day scroll dots
+  const dayData = plan.tasks[state.currentDay];
+  const allDone = dayData.items.every((_, i) => plan.checks[`${state.currentDay}-${i}`]);
+  const dayBtns = document.querySelectorAll('.day-btn');
+  if (dayBtns[state.currentDay]) dayBtns[state.currentDay].classList.toggle('done', allDone);
+  // update progress
+  const totalTasks = plan.tasks.reduce((s, d) => s + d.items.length, 0);
+  const doneTasks = Object.keys(plan.checks).length;
+  const pct = totalTasks ? Math.round(doneTasks / totalTasks * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressSub').textContent = `整体完成 ${pct}%`;
+}
+
+// ── LOADING ──
+function showLoading(msg, sub) {
+  document.getElementById('loadingMsg').textContent = msg;
+  document.getElementById('loadingSub').textContent = sub;
+  document.getElementById('loadingOverlay').classList.remove('hidden');
+}
+function hideLoading() { document.getElementById('loadingOverlay').classList.add('hidden'); }
+
+// ── BUTTONS ──
+function disableBtn(id) { const b = document.getElementById(id); b.disabled = true; b.textContent = '生成中'; b.classList.add('loading-dots'); }
+function enableBtn(id, label) { const b = document.getElementById(id); b.disabled = false; b.textContent = label; b.classList.remove('loading-dots'); }
+
+// ── ERRORS ──
+function showError(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.style.display = 'block'; }
+function hideError(id) { document.getElementById(id).style.display = 'none'; }
+
+// ── INIT ──
+showPage('home');
+if (state.plans.length === 0) showPage('input');
+</script>
+</body>
+</html>
