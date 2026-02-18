@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>GOALflow</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black: #0f0f0f;
+  --white: #f5f4f0;
+  --gray-100: #eeede9;
+  --gray-200: #dddcd8;
+  --gray-400: #999890;
+  --gray-600: #666560;
+  --border: #e0dfd9;
+  --green: #3d6b4f;
+  --green-light: #e8f0eb;
+  --green-border: #c5dac9;
+  --red: #c0392b;
+  --red-light: #fdf0ee;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  background: var(--white);
+  color: var(--black);
+  font-family: 'Noto Sans SC', sans-serif;
+  font-weight: 300;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── NAV ── */
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--white);
+  z-index: 100;
+}
+.logo { font-family: 'DM Serif Display', serif; font-size: 18px; letter-spacing: 0.05em; }
+.logo em { font-style: italic; color: var(--gray-600); }
+.nav-right { display: flex; align-items: center; gap: 12px; }
+.nav-hint { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--gray-400); letter-spacing: 0.08em; }
+.btn-settings {
+  background: none; border: 1px solid var(--border); border-radius: 6px;
+  padding: 4px 10px; font-size: 11px; font-family: 'DM Mono', monospace;
+  color: var(--gray-600); cursor: pointer;
+}
+
+/* ── PAGES ── */
+.page { display: none; animation: fadeUp 0.25s ease; }
+.page.active { display: block; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── BOTTOM TABS ── */
+.bottom-tabs {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: 58px; background: var(--white);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-around;
+  z-index: 200;
+}
+.tab-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 6px 20px; cursor: pointer; border: none; background: none;
+  color: var(--gray-400); transition: color 0.15s;
+}
+.tab-btn.active { color: var(--black); }
+.tab-icon { font-size: 17px; }
+.tab-label { font-size: 10px; font-family: 'DM Mono', monospace; letter-spacing: 0.04em; }
+
+/* ── SHARED COMPONENTS ── */
+.page-wrap { padding: 36px 20px 100px; max-width: 520px; margin: 0 auto; }
+.mono-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; color: var(--gray-400); text-transform: uppercase; margin-bottom: 28px; }
+.serif-title { font-family: 'DM Serif Display', serif; font-size: 30px; line-height: 1.25; margin-bottom: 6px; }
+.serif-title em { font-style: italic; color: var(--gray-600); }
+.body-sub { font-size: 13px; color: var(--gray-600); margin-bottom: 36px; }
+
+.field-group { margin-bottom: 22px; }
+.field-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--gray-600); margin-bottom: 8px; display: block; }
+.field-input {
+  width: 100%; border: 1px solid var(--border); border-radius: 8px;
+  padding: 13px 15px; font-family: 'Noto Sans SC', sans-serif;
+  font-size: 15px; font-weight: 300; color: var(--black);
+  background: var(--white); outline: none; transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+.field-input:focus { border-color: var(--black); }
+.field-input::placeholder { color: var(--gray-400); }
+textarea.field-input { resize: none; height: 96px; }
+
+.chips { display: flex; gap: 7px; flex-wrap: wrap; }
+.chip {
+  padding: 7px 14px; border: 1px solid var(--border); border-radius: 20px;
+  font-size: 12px; font-family: 'DM Mono', monospace; cursor: pointer;
+  transition: all 0.15s; background: var(--white); color: var(--gray-600);
+}
+.chip.sel { background: var(--black); color: var(--white); border-color: var(--black); }
+
+.ai-tip {
+  background: var(--green-light); border: 1px solid var(--green-border);
+  border-radius: 8px; padding: 12px 14px; margin-top: 10px;
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.ai-tip-icon { font-size: 13px; flex-shrink: 0; margin-top: 2px; color: var(--green); }
+.ai-tip-text { font-size: 13px; color: var(--green); line-height: 1.55; }
+.ai-tip-text strong { font-weight: 500; }
+
+.btn-primary {
+  width: 100%; padding: 15px; background: var(--black); color: var(--white);
+  border: none; border-radius: 10px; font-size: 15px;
+  font-family: 'Noto Sans SC', sans-serif; font-weight: 400;
+  cursor: pointer; letter-spacing: 0.03em; transition: opacity 0.15s;
+  margin-top: 28px; position: relative;
+}
+.btn-primary:active { opacity: 0.8; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-secondary {
+  width: 100%; padding: 14px; background: transparent; color: var(--black);
+  border: 1px solid var(--border); border-radius: 10px; font-size: 14px;
+  font-family: 'Noto Sans SC', sans-serif; cursor: pointer; margin-top: 10px;
+}
+
+.loading-dots::after {
+  content: ''; animation: dots 1.2s infinite;
+}
+@keyframes dots {
+  0%,20% { content: ''; }
+  40% { content: '.'; }
+  60% { content: '..'; }
+  80%,100% { content: '...'; }
+}
+
+.error-box {
+  background: var(--red-light); border: 1px solid #f0c8c4;
+  border-radius: 8px; padding: 12px 14px; margin-top: 12px;
+  font-size: 13px; color: var(--red); line-height: 1.55;
+}
+
+/* ── PAGE: INPUT ── */
+.time-custom { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.time-custom input {
+  width: 60px; border: 1px solid var(--border); border-radius: 6px;
+  padding: 7px 10px; font-family: 'DM Mono', monospace; font-size: 13px;
+  text-align: center; outline: none; background: var(--white); color: var(--black);
+}
+.time-custom span { font-size: 13px; color: var(--gray-600); }
+
+/* ── PAGE: OUTLINE ── */
+.meta-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.meta-tag { font-family: 'DM Mono', monospace; font-size: 11px; padding: 3px 9px; background: var(--gray-100); border-radius: 4px; color: var(--gray-600); }
+
+.phase-card {
+  border: 1px solid var(--border); border-radius: 12px;
+  padding: 18px; margin-bottom: 10px; background: var(--white);
+}
+.phase-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.phase-num { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--gray-400); letter-spacing: 0.1em; }
+.phase-days-badge { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gray-600); background: var(--gray-100); padding: 2px 8px; border-radius: 4px; }
+.phase-name { font-size: 15px; font-weight: 500; margin-bottom: 5px; }
+.phase-desc { font-size: 13px; color: var(--gray-600); line-height: 1.6; }
+.phase-topics { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.topic-tag { font-size: 11px; padding: 2px 8px; border: 1px solid var(--border); border-radius: 4px; color: var(--gray-600); font-family: 'DM Mono', monospace; }
+
+.outline-note {
+  margin-top: 18px; padding: 14px; border: 1px dashed var(--border); border-radius: 10px;
+}
+.outline-note-label { font-size: 11px; color: var(--gray-400); font-family: 'DM Mono', monospace; margin-bottom: 5px; }
+.outline-note-text { font-size: 13px; color: var(--gray-600); line-height: 1.6; }
+
+/* ── PAGE: DAILY ── */
+.progress-wrap { padding: 20px 20px 0; }
+.progress-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.progress-goal-title { font-family: 'DM Serif Display', serif; font-size: 20px; }
+.progress-frac { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gray-600); }
+.progress-track { height: 3px; background: var(--gray-200); border-radius: 2px; overflow: hidden; margin-bottom: 4px; }
+.progress-fill { height: 100%; background: var(--black); border-radius: 2px; transition: width 0.5s ease; }
+.progress-sub { font-size: 11px; color: var(--gray-400); font-family: 'DM Mono', monospace; }
+
+.day-scroll {
+  display: flex; gap: 7px; padding: 18px 20px 0;
+  overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.day-scroll::-webkit-scrollbar { display: none; }
+.day-btn {
+  flex-shrink: 0; display: flex; flex-direction: column; align-items: center;
+  width: 50px; padding: 10px 0; border: 1px solid var(--border);
+  border-radius: 10px; cursor: pointer; background: var(--white);
+  transition: all 0.15s; gap: 3px;
+}
+.day-btn.cur { background: var(--black); border-color: var(--black); }
+.day-btn.done { border-color: var(--green); }
+.day-num-text { font-family: 'DM Mono', monospace; font-size: 15px; color: var(--gray-600); }
+.day-btn.cur .day-num-text { color: var(--white); }
+.day-btn.done .day-num-text { color: var(--green); }
+.day-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gray-200); }
+.day-btn.done .day-dot { background: var(--green); }
+.day-btn.cur .day-dot { background: rgba(255,255,255,0.35); }
+
+.divider { display: flex; align-items: center; gap: 10px; margin: 20px 20px 0; }
+.divider-line { flex: 1; height: 1px; background: var(--border); }
+.divider-text { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--gray-400); letter-spacing: 0.1em; text-transform: uppercase; }
+
+.tasks-wrap { padding: 20px 20px 0; }
+.tasks-day-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.tasks-day-title { font-family: 'DM Serif Display', serif; font-size: 22px; }
+.tasks-day-phase { font-size: 11px; color: var(--gray-400); font-family: 'DM Mono', monospace; }
+.tasks-day-desc { font-size: 13px; color: var(--gray-600); margin-bottom: 18px; line-height: 1.55; }
+
+.task-item {
+  display: flex; gap: 14px; padding: 15px 0;
+  border-bottom: 1px solid var(--border); align-items: flex-start; cursor: pointer;
+}
+.task-item:last-child { border-bottom: none; }
+.task-check {
+  width: 22px; height: 22px; border: 1.5px solid var(--gray-200);
+  border-radius: 50%; flex-shrink: 0; margin-top: 1px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.task-item.done .task-check { background: var(--black); border-color: var(--black); }
+.check-mark { display: none; color: white; font-size: 11px; font-weight: 600; }
+.task-item.done .check-mark { display: block; }
+.task-body { flex: 1; }
+.task-title { font-size: 14px; color: var(--black); margin-bottom: 3px; transition: color 0.2s; line-height: 1.5; }
+.task-item.done .task-title { color: var(--gray-400); text-decoration: line-through; }
+.task-est { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gray-400); }
+.task-tag {
+  font-size: 10px; padding: 2px 7px; background: var(--gray-100);
+  border-radius: 3px; color: var(--gray-600); margin-top: 5px;
+  display: inline-block; font-family: 'DM Mono', monospace;
+}
+.spacer { height: 160px; }
+
+/* FAB */
+.fab {
+  position: fixed; bottom: 66px; left: 50%; transform: translateX(-50%);
+  width: calc(100% - 40px); max-width: 480px; z-index: 150;
+}
+.fab-inner {
+  background: var(--black); color: var(--white); padding: 14px 18px;
+  border-radius: 12px; display: flex; align-items: center;
+  justify-content: space-between; gap: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+}
+.fab-text { font-size: 13px; line-height: 1.4; flex: 1; }
+.fab-text strong { font-weight: 500; }
+.fab-text small { display: block; font-size: 11px; opacity: 0.55; font-family: 'DM Mono', monospace; margin-top: 1px; }
+.fab-action {
+  background: white; color: var(--black); border: none; border-radius: 7px;
+  padding: 8px 14px; font-size: 12px; font-weight: 500; cursor: pointer;
+  white-space: nowrap; font-family: 'Noto Sans SC', sans-serif;
+}
+
+/* ── PAGE: SETTINGS ── */
+.settings-section { margin-bottom: 28px; }
+.settings-title { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; color: var(--gray-400); text-transform: uppercase; margin-bottom: 12px; }
+.settings-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0; border-bottom: 1px solid var(--border);
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-row-label { font-size: 14px; }
+.settings-row-sub { font-size: 12px; color: var(--gray-400); margin-top: 2px; font-family: 'DM Mono', monospace; }
+
+/* ── PAGE: HOME (plan list) ── */
+.plan-card {
+  border: 1px solid var(--border); border-radius: 12px; padding: 18px;
+  margin-bottom: 10px; cursor: pointer; transition: border-color 0.15s;
+}
+.plan-card:active { border-color: var(--gray-400); }
+.plan-card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.plan-card-title { font-size: 15px; font-weight: 500; line-height: 1.4; flex: 1; padding-right: 10px; }
+.plan-card-date { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--gray-400); }
+.plan-progress-mini { height: 3px; background: var(--gray-200); border-radius: 2px; overflow: hidden; margin-bottom: 6px; }
+.plan-progress-mini-fill { height: 100%; background: var(--black); border-radius: 2px; }
+.plan-progress-label { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gray-600); }
+.plan-card-del {
+  background: none; border: none; color: var(--gray-400); font-size: 12px;
+  cursor: pointer; padding: 2px 6px; font-family: 'DM Mono', monospace;
+  margin-top: 10px;
+}
+
+.empty-state { text-align: center; padding: 60px 20px; }
+.empty-icon { font-size: 36px; margin-bottom: 16px; }
+.empty-title { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 8px; }
+.empty-sub { font-size: 13px; color: var(--gray-600); margin-bottom: 28px; }
+.btn-start {
+  display: inline-block; padding: 13px 28px; background: var(--black);
+  color: var(--white); border: none; border-radius: 10px; font-size: 14px;
+  font-family: 'Noto Sans SC', sans-serif; cursor: pointer;
+}
+
+
+/* ── BOTTOM SHEET ── */
+.sheet-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  z-index: 500; display: flex; align-items: flex-end;
+  animation: fadeIn 0.2s ease;
+}
+.sheet-overlay.hidden { display: none; }
+.sheet {
+  background: var(--white); border-radius: 20px 20px 0 0;
+  width: 100%; max-height: 85vh; overflow-y: auto;
+  animation: slideUp 0.28s ease; padding-bottom: 40px;
+}
+.sheet-handle {
+  width: 36px; height: 4px; background: var(--gray-200);
+  border-radius: 2px; margin: 12px auto 0;
+}
+.sheet-header {
+  padding: 16px 20px 0;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+}
+.sheet-title { font-family: 'DM Serif Display', serif; font-size: 22px; line-height: 1.3; flex: 1; }
+.sheet-close {
+  background: var(--gray-100); border: none; border-radius: 50%;
+  width: 30px; height: 30px; font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  color: var(--gray-600);
+}
+.sheet-body { padding: 16px 20px 0; }
+.sheet-section { margin-bottom: 20px; }
+.sheet-section-label {
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em;
+  color: var(--gray-400); text-transform: uppercase; margin-bottom: 8px;
+}
+.sheet-section-text { font-size: 14px; color: var(--gray-600); line-height: 1.7; }
+.sheet-section-text strong { color: var(--black); font-weight: 500; }
+
+/* chat in sheet */
+.sheet-chat { border-top: 1px solid var(--border); margin-top: 4px; padding-top: 16px; }
+.sheet-chat-label {
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em;
+  color: var(--gray-400); text-transform: uppercase; margin-bottom: 10px;
+}
+.chat-messages { margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; }
+.chat-msg {
+  padding: 10px 13px; border-radius: 10px; font-size: 13px; line-height: 1.6; max-width: 88%;
+}
+.chat-msg.ai { background: var(--gray-100); color: var(--black); align-self: flex-start; border-radius: 4px 10px 10px 10px; }
+.chat-msg.user { background: var(--black); color: var(--white); align-self: flex-end; border-radius: 10px 10px 4px 10px; }
+.chat-input-row { display: flex; gap: 8px; }
+.chat-input {
+  flex: 1; border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 13px; font-size: 14px; font-family: 'Noto Sans SC', sans-serif;
+  outline: none; background: var(--white); color: var(--black);
+}
+.chat-input:focus { border-color: var(--black); }
+.chat-send {
+  background: var(--black); color: var(--white); border: none;
+  border-radius: 8px; padding: 10px 14px; font-size: 13px; cursor: pointer;
+  white-space: nowrap; font-family: 'Noto Sans SC', sans-serif;
+}
+.chat-send:disabled { opacity: 0.5; }
+
+/* task detail */
+.resource-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px;
+  margin-bottom: 8px; text-decoration: none; color: var(--black);
+  transition: border-color 0.15s;
+}
+.resource-link:active { border-color: var(--gray-400); }
+.resource-link-icon { font-size: 18px; flex-shrink: 0; }
+.resource-link-body { flex: 1; }
+.resource-link-title { font-size: 14px; font-weight: 400; margin-bottom: 2px; }
+.resource-link-url { font-size: 11px; color: var(--gray-400); font-family: 'DM Mono', monospace; }
+.resource-link-arrow { color: var(--gray-400); font-size: 14px; }
+
+.sheet-loading { text-align: center; padding: 32px 0; color: var(--gray-400); font-size: 13px; }
+.sheet-loading-spin {
+  width: 24px; height: 24px; border: 2px solid var(--gray-200);
+  border-top-color: var(--black); border-radius: 50%;
+  animation: spin 0.8s linear infinite; margin: 0 auto 12px;
+}
+
+/* phase card clickable */
+.phase-card { cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; }
+.phase-card:active { border-color: var(--gray-400); }
+.phase-card-arrow { color: var(--gray-400); font-size: 13px; margin-top: 8px; font-family: 'DM Mono', monospace; }
+
+/* task item detail button */
+.task-detail-btn {
+  background: none; border: none; color: var(--gray-400); font-size: 11px;
+  font-family: 'DM Mono', monospace; cursor: pointer; padding: 0; margin-top: 4px;
+  letter-spacing: 0.05em;
+}
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+  display: flex; align-items: flex-end; z-index: 500;
+  animation: fadeIn 0.2s ease;
+}
+.modal-overlay.hidden { display: none; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal-sheet {
+  background: var(--white); border-radius: 16px 16px 0 0;
+  padding: 28px 20px 40px; width: 100%;
+  animation: slideUp 0.25s ease;
+}
+@keyframes slideUp { from { transform: translateY(40px); } to { transform: translateY(0); } }
+.modal-title { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 6px; }
+.modal-sub { font-size: 13px; color: var(--gray-600); margin-bottom: 20px; }
+
+/* ── LOADING OVERLAY ── */
+.loading-overlay {
+  position: fixed; inset: 0; background: var(--white);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 600;
+}
+.loading-overlay.hidden { display: none; }
+.loading-spinner {
+  width: 32px; height: 32px; border: 2px solid var(--gray-200);
+  border-top-color: var(--black); border-radius: 50%;
+  animation: spin 0.8s linear infinite; margin-bottom: 20px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-msg { font-family: 'DM Serif Display', serif; font-size: 20px; margin-bottom: 6px; }
+.loading-sub { font-size: 13px; color: var(--gray-600); }
+
+/* ── PRE-QUESTIONS ── */
+.prq-block { margin-bottom: 22px; }
+.prq-label { font-size: 14px; font-weight: 500; margin-bottom: 10px; line-height: 1.5; }
+.prq-chips { display: flex; gap: 7px; flex-wrap: wrap; }
+.prq-chip {
+  padding: 8px 14px; border: 1px solid var(--border); border-radius: 20px;
+  font-size: 13px; cursor: pointer; transition: all 0.15s;
+  background: var(--white); color: var(--gray-600);
+}
+.prq-chip.sel { background: var(--black); color: var(--white); border-color: var(--black); }
+.prq-divider { height: 1px; background: var(--border); margin: 20px 0; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">GOAL<em>flow</em></div>
+  <div class="nav-right">
+    <button class="btn-settings" onclick="showPage('settings')">设置</button>
+  </div>
+</nav>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay hidden" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-msg" id="loadingMsg">AI 正在规划</div>
+  <div class="loading-sub" id="loadingSub">通常需要 10～20 秒</div>
+</div>
+
+<!-- ═══ PAGE: HOME ═══ -->
+<div class="page active" id="page-home">
+  <div class="page-wrap">
+    <div class="mono-label">我的计划</div>
+    <div id="planList"></div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: INPUT ═══ -->
+<div class="page" id="page-input">
+  <!-- STEP 1: 输入目标 -->
+  <div id="inputStep1">
+    <div class="page-wrap">
+      <div class="mono-label">创建新计划</div>
+      <h1 class="serif-title">你想<em>学会</em><br>什么？</h1>
+      <p class="body-sub">告诉 AI 你的目标，它来帮你评估时间和制定计划</p>
+      <div class="field-group">
+        <label class="field-label">学习目标</label>
+        <textarea class="field-input" id="inputGoal" placeholder="例如：学会 Python 基础，能写简单的数据处理脚本" style="height:110px;"></textarea>
+      </div>
+      <div class="error-box" id="inputError" style="display:none"></div>
+      <button class="btn-primary" id="btnAnalyze" onclick="analyzeGoal()">AI 帮我评估时间 →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: AI 建议 + 前置问题 -->
+  <div id="inputStep2" style="display:none">
+    <div class="page-wrap">
+      <div class="mono-label">AI 评估结果</div>
+
+      <!-- AI 时间建议卡片 -->
+      <div id="aiAdviceCard" style="border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:28px;">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--gray-400);letter-spacing:0.12em;margin-bottom:10px;">AI 建议</div>
+        <div id="aiAdviceText" style="font-size:14px;color:var(--black);line-height:1.7;"></div>
+        <div style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap;" id="aiAdviceBadges"></div>
+      </div>
+
+      <!-- 前置问题 -->
+      <div id="preQuestions"></div>
+
+      <!-- 时间确认 -->
+      <div style="margin-bottom:22px;">
+        <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--gray-600);margin-bottom:8px;letter-spacing:0.08em;">确认计划时长</div>
+        <div class="chips" id="timeChips">
+          <div class="chip" data-val="3">3天</div>
+          <div class="chip sel" data-val="7">1周</div>
+          <div class="chip" data-val="14">2周</div>
+          <div class="chip" data-val="30">1个月</div>
+        </div>
+        <div class="time-custom">
+          <span>或精确到</span>
+          <input type="number" id="customDays" value="7" min="1" max="365">
+          <span>天</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:28px;">
+        <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--gray-600);margin-bottom:8px;letter-spacing:0.08em;">每天可用时间</div>
+        <div class="chips" id="timePerDayChips">
+          <div class="chip" data-val="0.5">30分钟</div>
+          <div class="chip sel" data-val="1">1小时</div>
+          <div class="chip" data-val="1.5">1.5小时</div>
+          <div class="chip" data-val="2">2小时+</div>
+        </div>
+      </div>
+
+      <div class="error-box" id="inputError2" style="display:none"></div>
+      <button class="btn-primary" id="btnGenOutline" onclick="generateOutline()">生成学习大纲 →</button>
+      <button class="btn-secondary" onclick="backToStep1()">重新填写目标</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: OUTLINE ═══ -->
+<div class="page" id="page-outline">
+  <div class="page-wrap">
+    <div class="meta-row" id="outlineMeta"></div>
+    <h2 class="serif-title" id="outlineTitle">AI 规划了你的学习路径</h2>
+    <p class="body-sub">确认大纲后生成每日详细任务 · 可随时修改</p>
+    <div id="outlinePhases"></div>
+    <div class="outline-note">
+      <div class="outline-note-label">AI 说明</div>
+      <div class="outline-note-text" id="outlineNote">对大纲满意后，点击下方按钮生成详细每日任务。</div>
+    </div>
+    <button class="btn-primary" id="btnGenTasks" onclick="generateTasks()">确认大纲，生成每日任务 →</button>
+    <button class="btn-secondary" onclick="showPage('input')">重新生成大纲</button>
+  </div>
+</div>
+
+<!-- ═══ PAGE: DAILY ═══ -->
+<div class="page" id="page-daily">
+  <div class="progress-wrap">
+    <div class="progress-head">
+      <span class="progress-goal-title" id="dailyGoalTitle">目标</span>
+      <span class="progress-frac" id="dailyFrac">Day 1 / 7</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-sub" id="progressSub"></div>
+  </div>
+
+  <div class="day-scroll" id="dayScroll"></div>
+
+  <div class="divider">
+    <div class="divider-line"></div>
+    <div class="divider-text">今日任务</div>
+    <div class="divider-line"></div>
+  </div>
+
+  <div class="tasks-wrap">
+    <div class="tasks-day-head">
+      <span class="tasks-day-title" id="dayTitle">第 1 天</span>
+      <span class="tasks-day-phase" id="dayPhase"></span>
+    </div>
+    <div class="tasks-day-desc" id="dayDesc"></div>
+    <div id="taskList"></div>
+    <div class="spacer"></div>
+  </div>
+
+  <div class="fab" id="fab">
+    <div class="fab-inner">
+      <div class="fab-text">
+        <strong id="fabProgress">0 / 0 完成</strong>
+        <small id="fabSub">加油！</small>
+      </div>
+      <button class="fab-action" id="fabBtn">查看明天 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: SETTINGS ═══ -->
+<div class="page" id="page-settings">
+  <div class="page-wrap">
+    <div class="mono-label">设置</div>
+    <h1 class="serif-title">配置</h1>
+
+    <div class="settings-section" style="margin-top:28px;">
+      <div class="settings-title">API 设置</div>
+      <div class="field-group">
+        <label class="field-label">ANTHROPIC API KEY</label>
+        <input type="password" class="field-input" id="apiKeyInput" placeholder="sk-ant-api03-...">
+        <div style="font-size:12px;color:var(--gray-400);margin-top:6px;font-family:'DM Mono',monospace;">Key 仅存储在本设备，不会上传</div>
+      </div>
+      <button class="btn-primary" onclick="saveApiKey()" style="margin-top:12px;">保存</button>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-title">数据</div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">清除所有计划</div>
+          <div class="settings-row-sub">无法恢复</div>
+        </div>
+        <button style="background:none;border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:12px;font-family:'DM Mono',monospace;color:var(--red);cursor:pointer;" onclick="clearAll()">清除</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-title">关于</div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">GOALflow</div>
+          <div class="settings-row-sub">v1.0 · 由 Claude AI 驱动</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM TABS -->
+<div class="bottom-tabs">
+  <button class="tab-btn active" id="tab-home" onclick="showPage('home')">
+    <span class="tab-icon">⊟</span>
+    <span class="tab-label">计划</span>
+  </button>
+  <button class="tab-btn" id="tab-input" onclick="showPage('input')">
+    <span class="tab-icon">＋</span>
+    <span class="tab-label">新目标</span>
+  </button>
+  <button class="tab-btn" id="tab-daily" onclick="showPage('daily')">
+    <span class="tab-icon">◈</span>
+    <span class="tab-label">今日</span>
+  </button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  CONFIG — MiniMax API
+// ═══════════════════════════════════════════════════
+const DEFAULT_API_KEY = 'sk-api-YnQx4IddMTTtT_zESJ39PZhBiQJ7LKzFfTrGUd5eECYoLFxBZwRF8MibgE8Mhmiuf_WcZvzyVJmeYED4V96sDFxBHH4Gt9b3S6TfGHOqL3xhLktMv8pHnMA';
+const MINIMAX_GROUP_ID = '2022887234998378913';
+const WORKER_URL = 'https://goalflow-proxy.mokscreate.workers.dev';
+
+// ── STATE ──
+let state = {
+  plans: [],          // saved plans
+  currentPlanId: null,
+  currentDay: 0,      // 0-indexed
+  // draft while creating
+  draft: {
+    goal: '',
+    days: 7,
+    hoursPerDay: 1,
+    outline: null,    // { phases, note }
+    tasks: null,      // [ { day, phase, desc, items:[{title,est,tag}] } ]
+  }
+};
+
+// ── STORAGE ──
+function save() { localStorage.setItem('gf_state', JSON.stringify(state)); }
+function load() {
+  const raw = localStorage.getItem('gf_state');
+  if (raw) { try { state = JSON.parse(raw); } catch(e){} }
+}
+load();
+
+// ── API KEY ──
+function getApiKey() {
+  return localStorage.getItem('gf_apikey') || DEFAULT_API_KEY;
+}
+function saveApiKey() {
+  const k = document.getElementById('apiKeyInput').value.trim();
+  if (!k) { alert('请输入 API Key'); return; }
+  localStorage.setItem('gf_apikey', k);
+  alert('已保存！');
+}
+
+// ── PAGES ──
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const tab = document.getElementById('tab-' + name);
+  if (tab) tab.classList.add('active');
+
+  if (name === 'home') renderHome();
+  if (name === 'daily') renderDaily();
+  if (name === 'settings') {
+    const k = localStorage.getItem('gf_apikey') || '';
+    document.getElementById('apiKeyInput').value = k;
+  }
+}
+
+// ── CHIPS (delegated, works after DOM updates) ──
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('chip') && e.target.closest('#timeChips')) {
+    document.querySelectorAll('#timeChips .chip').forEach(x => x.classList.remove('sel'));
+    e.target.classList.add('sel');
+    document.getElementById('customDays').value = e.target.dataset.val;
+  }
+  if (e.target.classList.contains('chip') && e.target.closest('#timePerDayChips')) {
+    document.querySelectorAll('#timePerDayChips .chip').forEach(x => x.classList.remove('sel'));
+    e.target.classList.add('sel');
+  }
+  if (e.target.classList.contains('prq-chip')) {
+    const block = e.target.closest('.prq-block');
+    block.querySelectorAll('.prq-chip').forEach(x => x.classList.remove('sel'));
+    e.target.classList.add('sel');
+  }
+});
+
+// ── STEP NAVIGATION ──
+function backToStep1() {
+  document.getElementById('inputStep2').style.display = 'none';
+  document.getElementById('inputStep1').style.display = 'block';
+}
+
+// ── ANALYZE GOAL (Step 1 → Step 2) ──
+async function analyzeGoal() {
+  const goal = document.getElementById('inputGoal').value.trim();
+  if (!goal) { showError('inputError', '请先填写你的学习目标'); return; }
+
+  hideError('inputError');
+  showLoading('AI 正在评估你的目标', '稍等片刻...');
+  document.getElementById('btnAnalyze').disabled = true;
+
+  try {
+    const sys = '你是学习规划专家。请只返回JSON，不要其他内容。格式：{"advice":"针对这个目标的时间评估和整体建议（2-3句话，中文）","suggestDays":14,"suggestHours":1,"badges":[{"label":"建议时长","value":"2周"},{"label":"每日时间","value":"1小时"},{"label":"难度","value":"中等"}],"questions":[{"id":"level","label":"你目前对这个领域的了解程度？","options":["完全零基础","听说过但没实操","有一些基础","有一定经验"]},{"id":"goal_depth","label":"你希望达到什么程度？","options":["能看懂基础内容","能独立完成简单任务","能熟练应用","达到专业水平"]},{"id":"style","label":"你偏好的学习方式？","options":["边学边做（项目驱动）","系统从头学起","快速扫完要点","刷视频/教程"]}]}';
+    const prompt = '学习目标：' + goal + '
+请评估这个目标并生成前置问题。';
+    const raw = await callClaude(prompt, sys);
+    const data = JSON.parse(raw.replace(/```json|```/g, '').trim());
+
+    // Fill advice card
+    document.getElementById('aiAdviceText').textContent = data.advice;
+    document.getElementById('aiAdviceBadges').innerHTML = data.badges.map(b => `
+      <div style="background:var(--gray-100);border-radius:6px;padding:6px 12px;">
+        <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--gray-400);">${b.label}</div>
+        <div style="font-size:14px;font-weight:500;margin-top:1px;">${b.value}</div>
+      </div>
+    `).join('');
+
+    // Set suggested days
+    if (data.suggestDays) {
+      document.getElementById('customDays').value = data.suggestDays;
+      document.querySelectorAll('#timeChips .chip').forEach(c => {
+        c.classList.toggle('sel', parseInt(c.dataset.val) === data.suggestDays);
+      });
+    }
+
+    // Render pre-questions (all optional)
+    document.getElementById('preQuestions').innerHTML = `
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--gray-400);letter-spacing:0.12em;margin-bottom:14px;">补充问题（可选，跳过也没关系）</div>
+    ` + data.questions.map(q => `
+      <div class="prq-block" data-qid="${q.id}">
+        <div class="prq-label" style="display:flex;align-items:center;gap:8px;">
+          ${q.label}
+          <span style="font-size:10px;font-family:'DM Mono',monospace;color:var(--gray-400);font-weight:300;">可选</span>
+        </div>
+        <div class="prq-chips">
+          <div class="prq-chip" data-val="">跳过</div>
+          ${q.options.map(opt => `<div class="prq-chip" data-val="${opt}">${opt}</div>`).join('')}
+        </div>
+      </div>
+      <div class="prq-divider"></div>
+    `).join('');
+
+    // Store questions for later use in outline generation
+    window._preQData = data.questions;
+
+    // Show step 2
+    document.getElementById('inputStep1').style.display = 'none';
+    document.getElementById('inputStep2').style.display = 'block';
+
+  } catch(e) {
+    showError('inputError', '分析失败：' + e.message);
+  } finally {
+    hideLoading();
+    document.getElementById('btnAnalyze').disabled = false;
+  }
+}
+
+// ── CALL MINIMAX VIA WORKER ──
+async function callClaude(prompt, systemPrompt) {
+  const key = getApiKey();
+  if (!key) throw new Error('请先在设置页填写 API Key');
+
+  const response = await fetch(WORKER_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      groupId: MINIMAX_GROUP_ID,
+      apiKey: key,
+      payload: {
+        model: 'MiniMax-Text-01',
+        max_tokens: 4096,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: prompt }
+        ]
+      }
+    })
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.base_resp?.status_msg || `API 错误 ${response.status}`);
+  }
+
+  const data = await response.json();
+  console.log('MiniMax response:', JSON.stringify(data));
+  if (!data.choices || !data.choices[0]) {
+    throw new Error('返回格式异常：' + JSON.stringify(data).slice(0, 200));
+  }
+  return data.choices[0].message.content;
+}
+
+// ── GENERATE OUTLINE ──
+async function generateOutline() {
+  const goal = document.getElementById('inputGoal').value.trim();
+  if (!goal) { showError('inputError2', '目标丢失，请返回重填'); return; }
+
+  const days = parseInt(document.getElementById('customDays').value) || 7;
+  const hoursChip = document.querySelector('#timePerDayChips .chip.sel');
+  const hours = hoursChip ? parseFloat(hoursChip.dataset.val) : 1;
+
+  // Collect pre-question answers (skip if user chose 跳过 or nothing)
+  const answers = [];
+  document.querySelectorAll('.prq-block').forEach(block => {
+    const sel = block.querySelector('.prq-chip.sel');
+    if (sel && sel.dataset.val) {
+      const labelNode = block.querySelector('.prq-label');
+      const label = labelNode.firstChild.textContent.trim();
+      answers.push({ q: label, a: sel.dataset.val });
+    }
+  });
+  const answersText = answers.length > 0
+    ? answers.map(a => a.q + ' → ' + a.a).join('\n')
+    : '用户未提供额外背景信息';
+
+  state.draft = { goal, days, hoursPerDay: hours, outline: null, tasks: null, answers };
+
+  hideError('inputError2');
+  showLoading('AI 正在生成大纲', '通常需要 10～20 秒');
+  disableBtn('btnGenOutline');
+
+  const systemPrompt = '你是一个助手，帮用户制定个性化学习计划。请只返回JSON，不要返回其他任何内容。格式：{"estimate":"时间评估一句话","phases":[{"num":1,"name":"阶段名","days":"Day 1-3","dayStart":1,"dayEnd":3,"desc":"描述","topics":["主题1","主题2"]}],"note":"建议一句话"}';
+
+  const prompt = `学习目标：${goal}
+计划天数：${days} 天
+每天学习时间：${hours} 小时
+用户背景信息：
+${answersText}
+
+请根据用户的背景信息生成个性化的学习阶段大纲，阶段数量根据天数合理分配（通常2-4个阶段）。`;
+
+  try {
+    const raw = await callClaude(prompt, systemPrompt);
+    const cleaned = raw.replace(/```json|```/g, '').trim();
+    const outline = JSON.parse(cleaned);
+    state.draft.outline = outline;
+    renderOutline();
+    showPage('outline');
+  } catch(e) {
+    showError('inputError2', '生成失败：' + e.message);
+  } finally {
+    hideLoading();
+    enableBtn('btnGenOutline', '生成学习大纲 →');
+  }
+}
+
+function renderOutline() {
+  const { goal, days, hoursPerDay, outline } = state.draft;
+
+  document.getElementById('outlineMeta').innerHTML = `
+    <span class="meta-tag">${goal.slice(0,15)}${goal.length>15?'…':''}</span>
+    <span class="meta-tag">${days} 天</span>
+    <span class="meta-tag">每天 ${hoursPerDay}h</span>
+  `;
+
+  document.getElementById('outlineTitle').textContent = `AI 规划了 ${outline.phases.length} 个学习阶段`;
+  document.getElementById('outlineNote').textContent = outline.note;
+
+  // AI estimate tip on input page
+  document.getElementById('aiEstimateText').innerHTML = `<strong>AI 预估：</strong>${outline.estimate}`;
+  document.getElementById('aiEstimateTip').style.display = 'flex';
+
+  document.getElementById('outlinePhases').innerHTML = outline.phases.map((p, i) => `
+    <div class="phase-card" onclick="openPhaseSheet(${i})">
+      <div class="phase-top">
+        <span class="phase-num">PHASE ${String(i+1).padStart(2,'0')}</span>
+        <span class="phase-days-badge">${p.days}</span>
+      </div>
+      <div class="phase-name">${p.name}</div>
+      <div class="phase-desc">${p.desc}</div>
+      <div class="phase-topics">
+        ${p.topics.map(t => `<span class="topic-tag">${t}</span>`).join('')}
+      </div>
+      <div class="phase-card-arrow">点击查看详情与 AI 讨论 →</div>
+    </div>
+  `).join('');
+}
+
+// ── GENERATE TASKS ──
+async function generateTasks() {
+  const { goal, days, hoursPerDay, outline } = state.draft;
+
+  showLoading('AI 正在生成每日任务', '内容较多，需要 20～40 秒');
+  disableBtn('btnGenTasks');
+
+  const systemPrompt = `你是一个助手，帮用户拆解每日学习任务。请只返回JSON，不要返回其他任何内容。格式：{"days":[{"day":1,"phase":"阶段名","desc":"今日主题","items":[{"title":"任务名","est":"约15分钟","tag":"学习"}]}]}`;
+
+  const outlineText = outline.phases.map(p =>
+    `${p.name}（${p.days}）：${p.desc}。主题：${p.topics.join('、')}`
+  ).join('\n');
+
+  const prompt = `目标：${goal}
+计划：${days} 天，每天 ${hoursPerDay} 小时
+大纲：
+${outlineText}
+
+请为每一天（共 ${days} 天）生成 3-5 个具体可执行的任务，每个任务有标题、预计时间和类型标签。`;
+
+  try {
+    const raw = await callClaude(prompt, systemPrompt);
+    const cleaned = raw.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(cleaned);
+    state.draft.tasks = result.days;
+
+    // save as plan
+    const planId = Date.now().toString();
+    const plan = {
+      id: planId,
+      goal,
+      days,
+      hoursPerDay,
+      outline,
+      tasks: result.days,
+      checks: {}, // { "day-taskIdx": true }
+      createdAt: new Date().toLocaleDateString('zh-CN'),
+    };
+    state.plans.push(plan);
+    state.currentPlanId = planId;
+    state.currentDay = 0;
+    save();
+
+    showPage('daily');
+  } catch(e) {
+    document.getElementById('page-outline').querySelector('.error-box') && null;
+    alert('生成失败：' + e.message);
+    enableBtn('btnGenTasks', '确认大纲，生成每日任务 →');
+  } finally {
+    hideLoading();
+  }
+}
+
+// ── RENDER HOME ──
+function renderHome() {
+  const el = document.getElementById('planList');
+  if (state.plans.length === 0) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">✦</div>
+        <div class="empty-title">还没有计划</div>
+        <div class="empty-sub">创建你的第一个 AI 学习计划</div>
+        <button class="btn-start" onclick="showPage('input')">开始规划 →</button>
+      </div>
+    `;
+    return;
+  }
+
+  el.innerHTML = state.plans.slice().reverse().map(plan => {
+    const totalTasks = plan.tasks.reduce((s, d) => s + d.items.length, 0);
+    const doneTasks = Object.keys(plan.checks).length;
+    const pct = totalTasks ? Math.round(doneTasks / totalTasks * 100) : 0;
+    return `
+      <div class="plan-card" onclick="openPlan('${plan.id}')">
+        <div class="plan-card-head">
+          <div class="plan-card-title">${plan.goal}</div>
+          <div class="plan-card-date">${plan.createdAt}</div>
+        </div>
+        <div class="plan-progress-mini">
+          <div class="plan-progress-mini-fill" style="width:${pct}%"></div>
+        </div>
+        <div class="plan-progress-label">${doneTasks} / ${totalTasks} 任务完成 · ${plan.days}天计划</div>
+        <button class="plan-card-del" onclick="event.stopPropagation();deletePlan('${plan.id}')">删除</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function openPlan(id) {
+  state.currentPlanId = id;
+  state.currentDay = 0;
+  // find today: first day with incomplete tasks
+  const plan = getPlan();
+  if (plan) {
+    for (let i = 0; i < plan.tasks.length; i++) {
+      const dayDone = plan.tasks[i].items.every((_, ti) => plan.checks[`${i}-${ti}`]);
+      if (!dayDone) { state.currentDay = i; break; }
+      if (i === plan.tasks.length - 1) state.currentDay = i;
+    }
+  }
+  save();
+  showPage('daily');
+}
+
+function deletePlan(id) {
+  if (!confirm('确认删除这个计划？')) return;
+  state.plans = state.plans.filter(p => p.id !== id);
+  if (state.currentPlanId === id) state.currentPlanId = null;
+  save();
+  renderHome();
+}
+
+function clearAll() {
+  if (!confirm('确认清除所有计划？')) return;
+  state.plans = [];
+  state.currentPlanId = null;
+  save();
+  renderHome();
+}
+
+// ── RENDER DAILY ──
+function getPlan() { return state.plans.find(p => p.id === state.currentPlanId); }
+
+function renderDaily() {
+  const plan = getPlan();
+  if (!plan) {
+    document.getElementById('page-daily').innerHTML = `<div class="page-wrap"><div class="empty-state"><div class="empty-icon">◈</div><div class="empty-title">没有活跃计划</div><div class="empty-sub">去创建一个吧</div><button class="btn-start" onclick="showPage('input')">开始规划 →</button></div></div>`;
+    return;
+  }
+
+  const { tasks, checks, goal, days } = plan;
+  const totalTasks = tasks.reduce((s, d) => s + d.items.length, 0);
+  const doneTasks = Object.keys(checks).length;
+  const pct = totalTasks ? Math.round(doneTasks / totalTasks * 100) : 0;
+
+  document.getElementById('dailyGoalTitle').textContent = goal.slice(0, 12) + (goal.length > 12 ? '…' : '');
+  document.getElementById('dailyFrac').textContent = `Day ${state.currentDay + 1} / ${days}`;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressSub').textContent = `整体完成 ${pct}%`;
+
+  // day scroll
+  document.getElementById('dayScroll').innerHTML = tasks.map((_, i) => {
+    const dayDone = tasks[i].items.every((__, ti) => checks[`${i}-${ti}`]);
+    const isCur = i === state.currentDay;
+    return `<div class="day-btn ${isCur ? 'cur' : ''} ${dayDone ? 'done' : ''}" onclick="selectDay(${i})">
+      <span class="day-num-text">${i + 1}</span>
+      <div class="day-dot"></div>
+    </div>`;
+  }).join('');
+
+  renderDayTasks();
+}
+
+function selectDay(i) {
+  state.currentDay = i;
+  save();
+  const plan = getPlan();
+  document.querySelectorAll('.day-btn').forEach((b, idx) => {
+    b.classList.toggle('cur', idx === i);
+  });
+  renderDayTasks();
+}
+
+function renderDayTasks() {
+  const plan = getPlan();
+  if (!plan) return;
+  const dayData = plan.tasks[state.currentDay];
+  if (!dayData) return;
+
+  document.getElementById('dayTitle').textContent = `第 ${state.currentDay + 1} 天`;
+  document.getElementById('dayPhase').textContent = dayData.phase || '';
+  document.getElementById('dayDesc').textContent = dayData.desc || '';
+
+  const checks = plan.checks;
+  const items = dayData.items;
+  const doneCnt = items.filter((_, ti) => checks[`${state.currentDay}-${ti}`]).length;
+
+  document.getElementById('taskList').innerHTML = items.map((item, ti) => {
+    const key = `${state.currentDay}-${ti}`;
+    const done = !!checks[key];
+    return `<div class="task-item ${done ? 'done' : ''}">
+      <div class="task-check" onclick="toggleTask(${ti})"><span class="check-mark">✓</span></div>
+      <div class="task-body" onclick="openTaskSheet(${ti})">
+        <div class="task-title">${item.title}</div>
+        <div class="task-est">⏱ ${item.est}</div>
+        <span class="task-tag">${item.tag}</span>
+        <div style="font-size:11px;color:var(--gray-400);font-family:'DM Mono',monospace;margin-top:4px;">点击查看详情 →</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // fab
+  document.getElementById('fabProgress').textContent = `${doneCnt} / ${items.length} 完成`;
+  const allDone = doneCnt === items.length;
+  const isLast = state.currentDay === plan.tasks.length - 1;
+  document.getElementById('fabSub').textContent = allDone
+    ? (isLast ? '🎉 全部完成！' : '今日全部完成，继续加油！')
+    : `还有 ${items.length - doneCnt} 个任务`;
+  const fabBtn = document.getElementById('fabBtn');
+  if (allDone && !isLast) {
+    fabBtn.textContent = '查看明天 →';
+    fabBtn.onclick = () => selectDay(state.currentDay + 1);
+  } else {
+    fabBtn.textContent = '计划详情';
+    fabBtn.onclick = () => showPage('home');
+  }
+}
+
+function toggleTask(ti) {
+  const plan = getPlan();
+  if (!plan) return;
+  const key = `${state.currentDay}-${ti}`;
+  if (plan.checks[key]) delete plan.checks[key];
+  else plan.checks[key] = true;
+  save();
+  renderDayTasks();
+  // update day scroll dots
+  const dayData = plan.tasks[state.currentDay];
+  const allDone = dayData.items.every((_, i) => plan.checks[`${state.currentDay}-${i}`]);
+  const dayBtns = document.querySelectorAll('.day-btn');
+  if (dayBtns[state.currentDay]) dayBtns[state.currentDay].classList.toggle('done', allDone);
+  // update progress
+  const totalTasks = plan.tasks.reduce((s, d) => s + d.items.length, 0);
+  const doneTasks = Object.keys(plan.checks).length;
+  const pct = totalTasks ? Math.round(doneTasks / totalTasks * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressSub').textContent = `整体完成 ${pct}%`;
+}
+
+
+// ── PHASE SHEET ──
+let currentPhaseIdx = null;
+let phaseDetailCache = {};
+let phaseChatHistory = {};
+
+async function openPhaseSheet(idx) {
+  const { outline, goal, days, hoursPerDay } = state.draft;
+  const phase = outline.phases[idx];
+  currentPhaseIdx = idx;
+
+  document.getElementById('sheetPhaseTitle').textContent = phase.name;
+  document.getElementById('sheetPhaseDays').textContent = `${phase.days}，共 ${phase.dayEnd - phase.dayStart + 1} 天`;
+  document.getElementById('sheetPhaseReason').innerHTML = '<div class="sheet-loading"><div class="sheet-loading-spin"></div>AI 分析中...</div>';
+  document.getElementById('sheetPhaseDetail').innerHTML = '';
+  document.getElementById('phaseChatMessages').innerHTML = '';
+  document.getElementById('phaseChatInput').value = '';
+  document.getElementById('phaseSheet').classList.remove('hidden');
+
+  if (phaseDetailCache[idx]) {
+    renderPhaseDetail(phaseDetailCache[idx]);
+    return;
+  }
+
+  try {
+    const sys = '你是学习顾问。请只返回JSON，格式：{"reason":"选择这个阶段的理由2-3句话","detail":"详细内容介绍3-4句话，包括具体会学到什么"}';
+    const prompt = `学习目标：${goal}（${days}天，每天${hoursPerDay}小时）
+阶段：${phase.name}（${phase.days}）
+描述：${phase.desc}
+主题：${phase.topics.join('、')}
+
+请解释为什么设置这个阶段，以及详细会学到什么。`;
+    const raw = await callClaude(prompt, sys);
+    const data = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    phaseDetailCache[idx] = data;
+    renderPhaseDetail(data);
+  } catch(e) {
+    document.getElementById('sheetPhaseReason').textContent = '加载失败：' + e.message;
+  }
+}
+
+function renderPhaseDetail(data) {
+  document.getElementById('sheetPhaseReason').innerHTML = data.reason;
+  document.getElementById('sheetPhaseDetail').innerHTML = data.detail;
+}
+
+async function sendPhaseChat() {
+  const input = document.getElementById('phaseChatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  const { outline, goal, days, hoursPerDay } = state.draft;
+  const phase = outline.phases[currentPhaseIdx];
+
+  const messagesEl = document.getElementById('phaseChatMessages');
+  messagesEl.innerHTML += `<div class="chat-msg user">${msg}</div>`;
+
+  const sendBtn = document.getElementById('phaseChatSend');
+  sendBtn.disabled = true;
+  sendBtn.textContent = '...';
+
+  const loadingEl = document.createElement('div');
+  loadingEl.className = 'chat-msg ai';
+  loadingEl.innerHTML = '<div class="sheet-loading-spin" style="width:16px;height:16px;margin:2px 0"></div>';
+  messagesEl.appendChild(loadingEl);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+
+  try {
+    if (!phaseChatHistory[currentPhaseIdx]) phaseChatHistory[currentPhaseIdx] = [];
+    phaseChatHistory[currentPhaseIdx].push({ role: 'user', content: msg });
+
+    const sys = `你是学习规划助手。用户正在讨论学习计划中的一个阶段，可以提出修改意见。
+当前阶段：${phase.name}（${phase.days}）
+目标：${goal}（${days}天，每天${hoursPerDay}小时）
+如果用户要求修改阶段，请返回JSON：{"action":"update","name":"新阶段名","days":"${phase.days}","desc":"新描述","topics":["主题1","主题2"]}
+如果只是回答问题，返回JSON：{"action":"reply","message":"回复内容"}`;
+
+    const historyMsgs = phaseChatHistory[currentPhaseIdx].map(m => ({ role: m.role, content: m.content }));
+    const raw = await callClaude(historyMsgs.map(m => m.content).join('\n'), sys);
+    const data = JSON.parse(raw.replace(/```json|```/g, '').trim());
+
+    loadingEl.remove();
+
+    if (data.action === 'update') {
+      // Apply the update to outline
+      state.draft.outline.phases[currentPhaseIdx] = {
+        ...phase,
+        name: data.name,
+        desc: data.desc,
+        topics: data.topics
+      };
+      phaseDetailCache[currentPhaseIdx] = null;
+      renderOutline();
+      messagesEl.innerHTML += `<div class="chat-msg ai">✓ 已更新阶段为"${data.name}"，大纲已刷新。</div>`;
+      document.getElementById('sheetPhaseTitle').textContent = data.name;
+      document.getElementById('sheetPhaseReason').textContent = '阶段已更新，关闭重新打开查看新详情。';
+      document.getElementById('sheetPhaseDetail').textContent = data.desc;
+    } else {
+      phaseChatHistory[currentPhaseIdx].push({ role: 'assistant', content: data.message });
+      messagesEl.innerHTML += `<div class="chat-msg ai">${data.message}</div>`;
+    }
+  } catch(e) {
+    loadingEl.remove();
+    messagesEl.innerHTML += `<div class="chat-msg ai">出错了：${e.message}</div>`;
+  } finally {
+    sendBtn.disabled = false;
+    sendBtn.textContent = '发送';
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+}
+
+// ── TASK SHEET ──
+let taskDetailCache = {};
+
+async function openTaskSheet(ti) {
+  const plan = getPlan();
+  if (!plan) return;
+  const dayData = plan.tasks[state.currentDay];
+  const item = dayData.items[ti];
+  const cacheKey = `${state.currentPlanId}-${state.currentDay}-${ti}`;
+
+  document.getElementById('sheetTaskTitle').textContent = item.title;
+  document.getElementById('sheetTaskEst').textContent = item.est + ' · ' + item.tag;
+  document.getElementById('sheetTaskDetail').innerHTML = '<div class="sheet-loading"><div class="sheet-loading-spin"></div>AI 生成中...</div>';
+  document.getElementById('sheetTaskResourceList').innerHTML = '<div class="sheet-loading"><div class="sheet-loading-spin"></div>加载中...</div>';
+  document.getElementById('taskSheet').classList.remove('hidden');
+
+  if (taskDetailCache[cacheKey]) {
+    renderTaskDetail(taskDetailCache[cacheKey]);
+    return;
+  }
+
+  try {
+    const sys = `你是一个专业的中文学习教练。请只返回JSON，不要其他内容。
+格式：{
+  "summary": "一句话总结这个任务的核心目标",
+  "keypoints": ["知识点1：详细解释", "知识点2：详细解释", "知识点3：详细解释"],
+  "example": "一个具体的代码示例或操作示例（如果适用）",
+  "tips": "一条实用的学习建议或常见误区提醒"
+}
+全部用中文，内容要具体实用，像老师在给学生讲解一样。`;
+    const prompt = `学习目标：${plan.goal}
+今日主题：${dayData.desc}
+任务：${item.title}（${item.est}）
+类型：${item.tag}
+请生成这个任务的详细中文学习内容，包括核心知识点和示例。`;
+    const raw = await callClaude(prompt, sys);
+    const data = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    taskDetailCache[cacheKey] = data;
+    renderTaskDetail(data);
+  } catch(e) {
+    document.getElementById('sheetTaskDetail').textContent = '加载失败：' + e.message;
+    document.getElementById('sheetTaskResourceList').innerHTML = '';
+  }
+}
+
+function renderTaskDetail(data) {
+  document.getElementById('sheetTaskDetail').innerHTML = `
+    <div style="margin-bottom:14px;">
+      <div style="font-size:13px;color:var(--green);background:var(--green-light);border-radius:6px;padding:10px 12px;line-height:1.6;">${data.summary}</div>
+    </div>
+    <div style="margin-bottom:16px;">
+      ${data.keypoints.map((kp, i) => `
+        <div style="padding:10px 0;border-bottom:1px solid var(--border);">
+          <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--gray-400);margin-bottom:4px;">POINT ${String(i+1).padStart(2,'0')}</div>
+          <div style="font-size:14px;line-height:1.7;color:var(--black);"><strong>${kp.split('：')[0]}</strong>${kp.includes('：') ? '：' + kp.split('：').slice(1).join('：') : ''}</div>
+        </div>
+      `).join('')}
+    </div>
+    ${data.example ? `
+      <div style="margin-bottom:16px;">
+        <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--gray-400);margin-bottom:6px;">示例</div>
+        <div style="background:#1e1e1e;color:#d4d4d4;border-radius:8px;padding:14px;font-family:'DM Mono',monospace;font-size:13px;line-height:1.7;white-space:pre-wrap;overflow-x:auto;">${data.example}</div>
+      </div>
+    ` : ''}
+    <div style="background:var(--gray-100);border-radius:6px;padding:10px 12px;">
+      <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--gray-400);margin-bottom:4px;">💡 学习建议</div>
+      <div style="font-size:13px;color:var(--gray-600);line-height:1.6;">${data.tips}</div>
+    </div>
+  `;
+  document.getElementById('sheetTaskResources').style.display = 'none';
+}
+
+function closeSheet(id) {
+  document.getElementById(id).classList.add('hidden');
+}
+
+// close sheet on overlay click
+document.getElementById('phaseSheet').addEventListener('click', function(e) {
+  if (e.target === this) closeSheet('phaseSheet');
+});
+document.getElementById('taskSheet').addEventListener('click', function(e) {
+  if (e.target === this) closeSheet('taskSheet');
+});
+
+// enter key in chat
+document.getElementById('phaseChatInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendPhaseChat(); }
+});
+
+
+// ── LOADING ──
+function showLoading(msg, sub) {
+  document.getElementById('loadingMsg').textContent = msg;
+  document.getElementById('loadingSub').textContent = sub;
+  document.getElementById('loadingOverlay').classList.remove('hidden');
+}
+function hideLoading() { document.getElementById('loadingOverlay').classList.add('hidden'); }
+
+// ── BUTTONS ──
+function disableBtn(id) { const b = document.getElementById(id); b.disabled = true; b.textContent = '生成中'; b.classList.add('loading-dots'); }
+function enableBtn(id, label) { const b = document.getElementById(id); b.disabled = false; b.textContent = label; b.classList.remove('loading-dots'); }
+
+// ── ERRORS ──
+function showError(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.style.display = 'block'; }
+function hideError(id) { document.getElementById(id).style.display = 'none'; }
+
+// ── INIT ──
+showPage('home');
+if (state.plans.length === 0) showPage('input');
+</script>
+
+<!-- PHASE DETAIL SHEET -->
+<div class="sheet-overlay hidden" id="phaseSheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title" id="sheetPhaseTitle">阶段详情</div>
+      <button class="sheet-close" onclick="closeSheet('phaseSheet')">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="sheet-section">
+        <div class="sheet-section-label">时间范围</div>
+        <div class="sheet-section-text" id="sheetPhaseDays"></div>
+      </div>
+      <div class="sheet-section">
+        <div class="sheet-section-label">AI 选择这个阶段的理由</div>
+        <div class="sheet-section-text" id="sheetPhaseReason">
+          <div class="sheet-loading"><div class="sheet-loading-spin"></div>加载中...</div>
+        </div>
+      </div>
+      <div class="sheet-section">
+        <div class="sheet-section-label">详细内容介绍</div>
+        <div class="sheet-section-text" id="sheetPhaseDetail"></div>
+      </div>
+      <div class="sheet-chat">
+        <div class="sheet-chat-label">和 AI 讨论这个阶段</div>
+        <div class="chat-messages" id="phaseChatMessages"></div>
+        <div class="chat-input-row">
+          <input class="chat-input" id="phaseChatInput" placeholder="例如：这部分我已经会了，换成别的…" />
+          <button class="chat-send" id="phaseChatSend" onclick="sendPhaseChat()">发送</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TASK DETAIL SHEET -->
+<div class="sheet-overlay hidden" id="taskSheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title" id="sheetTaskTitle">任务详情</div>
+      <button class="sheet-close" onclick="closeSheet('taskSheet')">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="sheet-section">
+        <div class="sheet-section-label">预计时间</div>
+        <div class="sheet-section-text" id="sheetTaskEst"></div>
+      </div>
+      <div class="sheet-section">
+        <div class="sheet-section-label">学习说明</div>
+        <div class="sheet-section-text" id="sheetTaskDetail">
+          <div class="sheet-loading"><div class="sheet-loading-spin"></div>AI 生成中...</div>
+        </div>
+      </div>
+      <div class="sheet-section" id="sheetTaskResources">
+        <div class="sheet-section-label">推荐学习资源</div>
+        <div id="sheetTaskResourceList">
+          <div class="sheet-loading"><div class="sheet-loading-spin"></div>加载中...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
